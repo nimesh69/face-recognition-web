@@ -1,0 +1,233 @@
+<!-- static/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition - Camera Capture</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-face-viewfinder"></i>
+                <h1>FaceRec<span>Camera</span></h1>
+            </div>
+            <div class="stats-badge" id="statsBadge">
+                <i class="fas fa-database"></i>
+                <span id="vectorCount">0</span> faces stored
+            </div>
+        </header>
+
+        <!-- Mode Toggle -->
+        <div class="mode-toggle">
+            <button class="mode-btn active" data-mode="register">
+                <i class="fas fa-camera"></i>
+                Capture & Register
+            </button>
+            <button class="mode-btn" data-mode="search">
+                <i class="fas fa-search"></i>
+                Search Face
+            </button>
+            <button class="mode-btn" data-mode="delete">
+                <i class="fas fa-trash"></i>
+                Delete User
+            </button>
+        </div>
+
+        <!-- Register Mode with Camera -->
+        <section id="registerSection" class="section active">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Capture Face Images</h2>
+                    <p>Use your camera to capture 30 face images for registration</p>
+                </div>
+
+                <!-- User ID Input -->
+                <div class="form-group">
+                    <label for="userId">User ID</label>
+                    <input type="text" id="userId" placeholder="Enter unique user identifier" required>
+                </div>
+
+                <!-- Camera Interface -->
+                <div class="camera-container" id="cameraContainer">
+                    <!-- Permission Request -->
+                    <div class="camera-permission" id="cameraPermission">
+                        <i class="fas fa-camera-slash"></i>
+                        <h3>Camera Access Required</h3>
+                        <p>Please allow camera access to capture face images</p>
+                        <button class="btn btn-primary" id="startCameraBtn">
+                            <i class="fas fa-video"></i>
+                            Start Camera
+                        </button>
+                    </div>
+
+                    <!-- Camera Preview (Hidden initially) -->
+                    <div class="camera-preview" id="cameraPreview" style="display: none;">
+                        <div class="video-wrapper">
+                            <video id="video" autoplay playsinline></video>
+                            <div class="face-overlay" id="faceOverlay">
+                                <div class="face-frame"></div>
+                                <p class="face-guide">Position your face within the frame</p>
+                            </div>
+                            
+                            <!-- Capture Controls -->
+                            <div class="capture-controls">
+                                <div class="capture-mode">
+                                    <button class="mode-switch active" data-capture="manual">
+                                        <i class="fas fa-hand-pointer"></i>
+                                        Manual
+                                    </button>
+                                    <button class="mode-switch" data-capture="burst">
+                                        <i class="fas fa-bolt"></i>
+                                        Auto Burst (30)
+                                    </button>
+                                </div>
+
+                                <button class="capture-btn" id="captureBtn">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                                
+                                <div class="capture-counter" id="captureCounter">
+                                    <span id="capturedCount">0</span>/30
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Captured Images Strip -->
+                        <div class="captured-strip" id="capturedStrip">
+                            <div class="strip-header">
+                                <h4>Captured Images</h4>
+                                <button class="btn-text" id="clearCaptured">
+                                    <i class="fas fa-trash"></i> Clear All
+                                </button>
+                            </div>
+                            <div class="strip-images" id="stripImages"></div>
+                        </div>
+
+                        <!-- Burst Progress -->
+                        <div class="burst-progress" id="burstProgress" style="display: none;">
+                            <div class="burst-bar">
+                                <div class="burst-fill" id="burstFill"></div>
+                            </div>
+                            <p>Capturing... <span id="burstCount">0</span>/30</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Progress -->
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-header">
+                        <span>Uploading to server...</span>
+                        <span id="uploadPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="uploadFill"></div>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="results-section" id="resultsSection" style="display: none;">
+                    <h3>Registration Results</h3>
+                    <div class="results-summary" id="resultsSummary"></div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="actions">
+                    <button class="btn btn-secondary" id="retakeBtn" style="display: none;">
+                        <i class="fas fa-redo"></i>
+                        Retake
+                    </button>
+                    <button class="btn btn-primary" id="uploadBtn" disabled>
+                        <i class="fas fa-cloud-upload"></i>
+                        Register Faces
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search Mode -->
+        <section id="searchSection" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Search by Face</h2>
+                    <p>Capture a face image to search the database</p>
+                </div>
+
+                <div class="search-camera-container" id="searchCameraContainer">
+                    <div class="camera-permission" id="searchCameraPermission">
+                        <i class="fas fa-camera"></i>
+                        <button class="btn btn-primary" id="startSearchCamera">
+                            <i class="fas fa-video"></i>
+                            Open Camera
+                        </button>
+                    </div>
+
+                    <div class="search-preview" id="searchPreview" style="display: none;">
+                        <video id="searchVideo" autoplay playsinline></video>
+                        <div class="face-overlay">
+                            <div class="face-frame"></div>
+                        </div>
+                        <button class="capture-btn" id="searchCaptureBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+
+                    <div class="search-result-preview" id="searchResultPreview" style="display: none;">
+                        <img id="searchResultImg" src="" alt="Captured">
+                        <button class="btn-icon" id="retakeSearch">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="search-results" id="searchResults" style="display: none;">
+                    <h3>Matching Results</h3>
+                    <div class="matches-list" id="matchesList"></div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-primary" id="submitSearch" disabled>
+                        <i class="fas fa-search"></i>
+                        Search Database
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Delete Mode -->
+        <section id="deleteSection" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Delete User Data</h2>
+                    <p>Permanently remove a user and their face data from the database</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="deleteUserId">User ID</label>
+                    <input type="text" id="deleteUserId" placeholder="Enter User ID to delete">
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-primary" id="deleteUserBtn" style="background-color: var(--error);">
+                        <i class="fas fa-trash-alt"></i>
+                        Delete User
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <!-- Hidden Canvas for Image Processing -->
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
